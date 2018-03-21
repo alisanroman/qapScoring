@@ -1,7 +1,7 @@
 /* =====================
   Helper functions
 ===================== */
-var defaultMapview = function(){
+var defaultMapView = function(){
   map.setView([40, -75.1090], 11);
 };
 
@@ -46,7 +46,7 @@ var Stamen_TonerLite = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{
 var slide1Func = function(e) {
   // Reset Map
   clearMap();
-  defaultMapview();
+  defaultMapView();
 
   // First show poverty rates chloropleth
   povertyArray = _.map(parsedData.features,
@@ -92,6 +92,22 @@ var slide1Func = function(e) {
   map.addLayer(featureGroup);
 };
 
+var slide2Func = function() {
+  // code here
+};
+
+var slide3Func = function() {
+  //code here
+};
+
+var slide4Func = function() {
+  //code here
+};
+
+var slide5Func = function() {
+  //code here
+};
+
 /* =====================
 State object
 ===================== */
@@ -124,7 +140,13 @@ var state = {
 /* =====================
   Data
 ===================== */
-var dataset = "https://raw.githubusercontent.com/alisanroman/qapScoring/master/data/Census_Tracts_2010.geojson";
+var nhoodURL = "https://raw.githubusercontent.com/alisanroman/philly-hoods/master/data/Neighborhoods_Philadelphia.geojson";
+var nhoodParse = $.ajax(nhoodURL);
+var nhoodParse1 = JSON.parse(nhoodParse.responseText);
+
+var tractsURL = "https://raw.githubusercontent.com/alisanroman/qapScoring/master/data/Census_Tracts_2010.geojson";
+
+
 var colorRamp = ["#C07CBE","#DFBCDD","#FEFDFC","#FCD47F","#FBAC02"];
 
 /* =====================
@@ -198,118 +220,3 @@ $.ajax(dataset).done(function(dataset) {
     clickPreviousButton();
   });
 });
-
-
-
-/*
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var povertyData = $.ajax("https://api.census.gov/data/2016/acs/acs5?get=B17001_001E,B17001_002E&for=tract:*&in=state:42&in=county:101&key=4d92e5c53d5b7046bae0b72874aceed0fde3e0b4");
-var povertyDataJSON = povertyData.responseJSON;
-
-
-
-
-var myStyle = function(feature) {
-  return {};
-};
-
-
-
-var showResults = function() { */
-  /* =====================
-  This function uses some jQuery methods that may be new. $(element).hide()
-  will add the CSS "display: none" to the element, effectively removing it
-  from the page. $(element).show() removes "display: none" from an element,
-  returning it to the page. You don't need to change this part.
-  ===================== */
-  // => <div id="intro" css="display: none">
-/*  $('#intro').hide();
-  // => <div id="results">
-  $('#results').show();
-};
-
-
-var eachFeatureFunction = function(layer) {
-  layer.on('click', function (event) {
-    /* =====================
-    The following code will run every time a layer on the map is clicked.
-    Check out layer.feature to see some useful data about the layer that
-    you can use in your application.
-    ===================== */
-/*    console.log(layer.feature);
-    showResults();
-  });
-};
-
-var myFilter = function(feature) {
-  return true;
-};
-
-$(document).ready(function() {
-  $.ajax(dataset).done(function(data) {
-    var parsedData = JSON.parse(data);
-    featureGroup = L.geoJson(parsedData, {
-      style: myStyle,
-      filter: myFilter
-    }).addTo(map);
-
-    // quite similar to _.each
-    featureGroup.eachLayer(eachFeatureFunction);
-  });
-});
-
-
-
-/*
-var dataset = "http://data.phl.opendata.arcgis.com/datasets/8bc0786524a4486bb3cf0f9862ad0fbf_0.geojson";
-var featureGroup;
-
-var myStyle = function(feature) {
-  return {};
-};
-
-var showResults = function() {
-  // => <div id="intro" css="display: none">
-  $('#intro').hide();
-  // => <div id="results">
-  $('#results').show();
-};
-
-var eachFeatureFunction = function(layer) {
-  layer.on('click', function(event) {
-    console.log(layer.feature);
-    showResults();
-  });
-};
-
-var myFilter = function(feature) {
-  return true;
-};
-
-$(document).ready(function() {
-  $.ajax(dataset).done(function(data) {
-    var parseData = JSON.parse(data);
-    featureGroup = L.geoJson(parsedData, {
-      style: myStyle,
-      filter: myFilter
-    }).addTo(map);
-
-    featureGroup.eachLayer(eachFeatureFunction);
-  });
-});
-/* =====================
-## Task 2 : Slide functions
-===================== */
