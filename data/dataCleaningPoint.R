@@ -48,8 +48,7 @@ for(i in 1:nrow(subHousing)) {
   subHousing$lon[i] <- as.numeric(result[1])
   subHousing$lat[i] <- as.numeric(result[2])
 }
-## Geocode those that didn't work above b/c over query limit
-?geocode
+## Geocode those that didn't work above b/c over query limit - re-run this 3 times
 for(i in 1:nrow(subHousing)) {
   if(is.na(subHousing$lon[i]) == TRUE) {
     result <- geocode(paste(subHousing$Address, subHousing$City, subHousing$State
@@ -60,6 +59,9 @@ for(i in 1:nrow(subHousing)) {
   }
 }
 
+colnames(subHousing)
+subHousing.sp  <- SpatialPointsDataFrame(subHousing[,c(20,21)],subHousing[,-c(20,21)])
+str(subHousing.sp) # Now is class SpatialPointsDataFrame
 
-## Export as geoJSON
-writeOGR(subHousing, 'pointData.geojson','pointData', driver='GeoJSON')
+# Write as geojson
+writeOGR(subHousing.sp, 'pointData.geojson','pointData', driver='GeoJSON')

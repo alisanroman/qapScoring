@@ -73,11 +73,14 @@ combo3$homPct <- ifelse(combo3$hhs != 0, as.numeric(round((combo3$hom / combo3$h
 
 polyData <- left_join(x=hoods,y=combo3,by="mapname")
 polyData <- subset(polyData,select = -c(cartodb_id,created_at,updated_at,name,listname))
+
+# Create category var for final slide
+polyData$categ <- ifelse(polyData$povPct < 25.9 & polyData$homPct >= 52.4, "Low poverty, high homeownership",
+                         ifelse(polyData$povPct < 25.9 & polyData$homPct < 52.4, "Low poverty, low homeownership",
+                                ifelse(polyData$povPct >= 25.9 & polyData$homPct < 52.4, "High poverty, low homeownership",
+                                       ifelse(polyData$povPct >= 25.9 & polyData$homPct >= 52.4
+                                              , "High poverty, high homeownership",""))))
+unique(polyData$categ)
 plot(polyData)
 
 geojson_write(input=polyData,file="polyData.geojson")
-
-?geojson_write
-
-
-writeOGR(polyData, 'polyData.geojson','polyData', driver='GeoJSON')

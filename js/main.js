@@ -5,27 +5,54 @@ var defaultMapView = function(){
   map.setView([40, -75.1090], 11);
 };
 
-var clearMap = function(){
-  if (typeof featureGroup !== 'undefined') {
-    map.removeLayer(featureGroup);
-  }
+var clearMap = function() {
+  map.eachLayer(function (layer) {
+    map.removeLayer(layer);
+  });
 };
 
 var polyPopUp = function(feature) {
   thePopup = L.popup({className: 'poly-popup'})
   .setContent(
     feature.properties.mapname + // want to have the nhood name
-    "<br><em class='popup-body'>Poverty rate: </em>" +
+    "<br><em class='popup-body'>Poverty Rate: </em>" +
     feature.properties.povPct + "%" // need poverty rate for each census tract
   );
   return(thePopup);
 };
 
-var subsidizedPopUp = function(feature) {
+var polyPopUp2 = function(feature) {
+  thePopup = L.popup({className: 'poly-popup'})
+  .setContent(
+    feature.properties.mapname + // want to have the nhood name
+    "<br><em class='popup-body'>Homeownership Rate: </em>" +
+    feature.properties.homPct + "%" // need poverty rate for each census tract
+  );
+  return(thePopup);
+};
+
+var polyPopUp3 = function(feature) {
+  thePopup = L.popup({className: 'poly-popup'})
+  .setContent(
+    feature.properties.mapname + //neighborhood
+    "<br>" +
+    feature.properties.categ + //category
+    "<br><em class = 'popup-body'>Poverty Rate: </em>" +
+    feature.properties.povPct + "%" +
+    "<br><em class='popup-body'>Homeownership Rate: </em>" +
+    feature.properties.homPct + "%"
+  );
+  return(thePopup);
+};
+
+var pointPopUp = function(feature) {
   thePopup = L.popup({className: 'popup'})
   .setContent(
-    feature.properties["Property.Name"] +
-    "<br><em class='popup-body'> Total Units: </em>"
+    feature.properties.propName +
+    "<br><em class='popup-body'> Total Units: </em>" +
+    feature.properties.totalUnits +
+    "<br><em class='popup-body'> Year Built: </em>" +
+    feature.properties.yrBuilt
   );
   return(thePopup);
 };
@@ -49,13 +76,19 @@ var Stamen_TonerLite = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{
   ext: 'png'
 }).addTo(map);
 
+
+
 /* ======================
     Slide functions
 ========================= */
 
+/////////////////////////////////////////
+//// Slide 1: Poverty rates          ////
+/////////////////////////////////////////
 var slide1Func = function(e) {
   // Reset Map
   clearMap();
+  Stamen_TonerLite.addTo(map);
   defaultMapView();
 
   // First show poverty rates chloropleth
@@ -88,7 +121,140 @@ var slide1Func = function(e) {
   myStyle = function(feature) {
     var theStyle = {
       color: colorPolygons(feature),
-      fillOpacity: 0.75,
+      fillOpacity: 0.45,
+      stroke: true,
+      strokeOpacity: 1,
+      weight: 1
+    };
+    return(theStyle);
+  };
+  featureGroup = L.geoJson(parsedData, {
+    style: myStyle,
+    onEachFeature: function(feature,layer) {
+      layer.bindPopup(polyPopUp(feature));
+    }
+  });
+  map.addLayer(featureGroup);
+};
+
+/////////////////////////////////////////
+//// Slide 2: Add affordable housing ////
+/////////////////////////////////////////
+var slide2Func = function() {
+  // Reset map
+  clearMap();
+  Stamen_TonerLite.addTo(map);
+  map.setView([39.964,-75.148], 15);
+
+  myStyle = function(feature) {
+    return {
+      stroke: true,
+      strokeOpacity: 0.75,
+      fillOpacity: 0.5,
+      color: colorRamp[4],
+      radius: feature.properties.totalUnits * 0.2,
+      weight: 1
+    };
+  };
+
+  featureGroup = L.geoJson(pointParsedData, {
+     style: myStyle,
+     pointToLayer: function(feature, latlng) {
+         return new L.CircleMarker(latlng, {fillOpacity: 0.65});
+     },
+     onEachFeature: function (feature, layer) {
+         layer.bindPopup(pointPopUp(feature));
+     }
+   }).addTo(map);
+};
+
+/////////////////////////////////////////
+//// Slide 3: Filter by yr built     ////
+/////////////////////////////////////////
+var slide3Func = function() {
+  // Reset map
+  clearMap();
+  Stamen_TonerLite.addTo(map);
+  map.setView([39.964,-75.148], 15);
+
+  // Define color scheme
+  colorCircles = function(feature) {
+    if(feature.properties.yrBuilt === null ) {
+      return "#CCCCCC";
+    } else if(feature.properties.yrBuilt < 1960) {
+      return colorRamp[0];
+    } else if(feature.properties.yrBuilt < 1970) {
+      return colorRamp[1];
+    } else if(feature.properties.yrBuilt < 1980) {
+      return colorRamp[2];
+    } else if(feature.properties.yrBuilt < 1990) {
+      return colorRamp[3];
+    } else { return colorRamp[4]; }
+  };
+
+  myStyle = function(feature) {
+    var theStyle = {
+      stroke: true,
+      strokeOpacity: 0.75,
+      fillOpacity: 0.5,
+      color: colorCircles(feature),
+      radius: feature.properties.totalUnits * 0.2,
+      weight: 1
+    };
+    return(theStyle);
+  };
+
+  featureGroup = L.geoJson(pointParsedData, {
+    style: myStyle,
+    pointToLayer: function(feature, latlng) {
+        return new L.CircleMarker(latlng, {fillOpacity: 0.65});
+    },
+    onEachFeature: function (feature, layer) {
+        layer.bindPopup(pointPopUp(feature));
+    }
+  }).addTo(map);
+
+};
+
+/////////////////////////////////////////
+//// Slide 4: Homeownership rates    ////
+/////////////////////////////////////////
+var slide4Func = function() {
+  clearMap();
+  Stamen_TonerLite.addTo(map);
+  defaultMapView();
+
+  // Show home ownership chloropleth
+  homeOwnership = _.map(parsedData.features,
+  function(tract) {
+    return tract.properties.homPct;
+  });
+
+  theLimits = chroma.limits(homeOwnership,'q',5);
+
+  // Define color scheme
+  colorPolygons = function(feature) {
+    if(feature.properties.homPct === "NA") {
+      return "#FFFFFF";
+    } else if(feature.properties.homPct < theLimits[1]) {
+      return colorRamp[0];
+    } else if(feature.properties.homPct < theLimits[2]) {
+      return colorRamp[1];
+    } else if(feature.properties.homPct < theLimits[3]) {
+      return colorRamp[2];
+    } else if(feature.properties.homPct < theLimits[4]) {
+      return colorRamp[3];
+    } else {
+      return colorRamp[4];
+    }
+  };
+
+  // want to get a legend in here
+
+  myStyle = function(feature) {
+    var theStyle = {
+      color: colorPolygons(feature),
+      fillOpacity: 0.45,
       stroke: true,
       strokeOpacity: 1,
       weight: 1
@@ -98,72 +264,64 @@ var slide1Func = function(e) {
 
   featureGroup = L.geoJson(parsedData, {
     style: myStyle,
-
     onEachFeature: function(feature,layer) {
-      layer.bindPopup(polyPopUp(feature));
+      layer.bindPopup(polyPopUp2(feature));
     }
-  });
-  map.addLayer(featureGroup);
+  }).addTo(map);
 };
 
-var slide2Func = function() {
 
-  // First show poverty rates chloropleth, zooming in on Society Hill
-  slide1Func();
-  map.setView([39.95,-75.14], 15);
-
-  subsidizedHousingArray = _.map(pointParsedData)
-
-};
-
-/*
-
-  pricesArray = _.map(parsedData.features,
-     function(college){
-       return college.properties.Median_HHIncome;
-   });
-
-   theLimits = chroma.limits(pricesArray, 'q', 5);
-
-   myStyle = function(feature){
-     if (feature.properties.Median_HHIncome < theLimits[1]) {
-       return {fillColor: colorRamp[0], stroke: false};
-     } else if (feature.properties.Median_HHIncome < theLimits[2]) {
-       return {fillColor: colorRamp[1], stroke: false};
-     } else if (feature.properties.Median_HHIncome < theLimits[3]) {
-       return {fillColor: colorRamp[2], stroke: false};
-     } else if (feature.properties.Median_HHIncome < theLimits[4]) {
-       return {fillColor: colorRamp[3], stroke: false};
-     } else {
-       return {fillColor: colorRamp[4], stroke: false};
-     }
-   };
-
-   featureGroup = L.geoJson(parsedData, {
-     style: myStyle,
-
-     pointToLayer: function(feature, latlng) {
-         return new L.CircleMarker(latlng, {radius: 3, fillOpacity: 0.85});
-     },
-
-     onEachFeature: function (feature, layer) {
-         layer.bindPopup(pointPopup(feature));
-     }
-   });
-   map.addLayer(featureGroup);
-*/
-
-
-var slide3Func = function() {
-  //code here
-};
-
-var slide4Func = function() {
-  //code here
-};
+/////////////////////////////////////////
+//// Slide 5: Putting it together   ////
+/////////////////////////////////////////
 
 var slide5Func = function() {
-  //code here
+  clearMap();
+  Stamen_TonerLite.addTo(map);
+
+  // Show combo chloropleth
+  comboPoly = _.map(parsedData.features,
+  function(tract) {
+    return tract.properties.categ;
+  });
+
+  // Define color scheme
+  colorPolygons = function(feature) {
+    if(feature.properties.categ === "NA") {
+      return "#FFFFFF";
+    } else if(feature.properties.categ == "Low poverty, high homeownership") {
+      return colorRamp[4];
+    } else if(feature.properties.categ == "Low poverty, low homeownership") {
+      return colorRamp[3];
+    } else if(feature.properties.categ == "High poverty, high homeownership") {
+      return colorRamp[1];
+    } else if(feature.properties.categ == "High poverty, low homeownership") {
+      return colorRamp[0];
+    } else {
+      return colorRamp[2];
+    }
+  };
+
+  // want to get a legend in here
+
+  myStyle = function(feature) {
+    var theStyle = {
+      color: colorPolygons(feature),
+      fillOpacity: 0.45,
+      stroke: true,
+      strokeOpacity: 1,
+      weight: 1
+    };
+    return(theStyle);
+  };
+
+  featureGroup = L.geoJson(parsedData, {
+    style: myStyle,
+    onEachFeature: function(feature,layer) {
+      layer.bindPopup(polyPopUp3(feature));
+    }
+  }).addTo(map);
+
 };
 
 /* =====================
@@ -181,7 +339,7 @@ var state = {
       "text": slide2text
     },
     {
-      "title": "Where is there limited affordable housing production in the past 20 years?",
+      "title": "Where has there been limited affordable housing production in the past 20 years?",
       "text": slide3text
     },
     {
@@ -189,7 +347,7 @@ var state = {
       "text": slide4text
     },
     {
-      "title": "Where are there high performing schools?",
+      "title": "Putting it all together.",
       "text": slide5text
     }
   ]
@@ -199,7 +357,7 @@ var state = {
   Data
 ===================== */
 var polyData = "https://raw.githubusercontent.com/alisanroman/qapScoring/master/data/polyData.geojson";
-var pointData = "";
+var pointData = "https://raw.githubusercontent.com/alisanroman/qapScoring/master/data/pointData.geojson";
 
 var colorRamp = ["#F03400","#F26711","#D9A60F","#758540","#384216"];
 
@@ -215,7 +373,7 @@ var myStyle = {};
 $.ajax(pointData).done(function(pointData) {
   // Parse JSON
   pointParsedData = JSON.parse(pointData);
-  featureGroup = L.geoJson(parsedData, {
+  featureGroup = L.geoJson(pointParsedData, {
     style: {
       fillColor: colorRamp[4],
       stroke: false
@@ -225,7 +383,7 @@ $.ajax(pointData).done(function(pointData) {
     },
   });
   map.addLayer(featureGroup);
-};
+});
 
 
 $.ajax(polyData).done(function(polyData) {
