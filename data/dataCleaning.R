@@ -3,6 +3,8 @@ library(dplyr)
 library(rjson)
 library(plyr)
 library(tidyr)
+library(rgdal)
+library(geojsonio)
 
 hoods <- st_read("https://raw.githubusercontent.com/alisanroman/philly-hoods/master/data/Neighborhoods_Philadelphia.geojson")
 tracts <- st_read("https://raw.githubusercontent.com/alisanroman/qapScoring/master/data/Census_Tracts_2010.geojson")
@@ -70,3 +72,12 @@ combo3$povPct <- ifelse(combo3$pop != 0, as.numeric(round((combo3$pov / combo3$p
 combo3$homPct <- ifelse(combo3$hhs != 0, as.numeric(round((combo3$hom / combo3$hhs) * 100,1)), NA)
 
 polyData <- left_join(x=hoods,y=combo3,by="mapname")
+polyData <- subset(polyData,select = -c(cartodb_id,created_at,updated_at,name,listname))
+plot(polyData)
+
+geojson_write(input=polyData,file="polyData.geojson")
+
+?geojson_write
+
+
+writeOGR(polyData, 'polyData.geojson','polyData', driver='GeoJSON')

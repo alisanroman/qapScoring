@@ -14,12 +14,22 @@ var clearMap = function(){
 var polyPopUp = function(feature) {
   thePopup = L.popup({className: 'poly-popup'})
   .setContent(
-    feature.properties.neighborhood + // want to have the nhood name
+    feature.properties.mapname + // want to have the nhood name
     "<br><em class='popup-body'>Poverty rate: </em>" +
-    feature.properties.pctPoverty + "%" // need poverty rate for each census tract
+    feature.properties.povPct + "%" // need poverty rate for each census tract
   );
   return(thePopup);
 };
+
+var subsidizedPopUp = function(feature) {
+  thePopup = L.popup({className: 'popup'})
+  .setContent(
+    feature.properties["Property.Name"] +
+    "<br><em class='popup-body'> Total Units: </em>"
+  );
+  return(thePopup);
+};
+
 
 /* =====================
   Basemap
@@ -51,25 +61,29 @@ var slide1Func = function(e) {
   // First show poverty rates chloropleth
   povertyArray = _.map(parsedData.features,
   function(tract) {
-    return tract.properties.pctPoverty;
+    return tract.properties.povPct;
   });
 
   theLimits = chroma.limits(povertyArray,'q',5);
 
   // Define color scheme
   colorPolygons = function(feature) {
-    if(feature.properties.pctPoverty < theLimits[1]) {
-      return colorRamp[0];
-    } else if(feature.properties.pctPoverty < theLimits[2]) {
-      return colorRamp[1];
-    } else if(feature.properties.pctPoverty < theLimits[3]) {
-      return colorRamp[2];
-    } else if(feature.properties.pctPoverty < theLimits[4]) {
-      return colorRamp[3];
-    } else {
+    if(feature.properties.povPct === "NA") {
+      return "#FFFFFF";
+    } else if(feature.properties.povPct < theLimits[1]) {
       return colorRamp[4];
+    } else if(feature.properties.povPct < theLimits[2]) {
+      return colorRamp[3];
+    } else if(feature.properties.povPct < theLimits[3]) {
+      return colorRamp[2];
+    } else if(feature.properties.povPct < theLimits[4]) {
+      return colorRamp[1];
+    } else {
+      return colorRamp[0];
     }
   };
+
+  // want to get a legend in here
 
   myStyle = function(feature) {
     var theStyle = {
@@ -93,8 +107,52 @@ var slide1Func = function(e) {
 };
 
 var slide2Func = function() {
-  // code here
+
+  // First show poverty rates chloropleth, zooming in on Society Hill
+  slide1Func();
+  map.setView([39.95,-75.14], 15);
+
+  subsidizedHousingArray = _.map(pointParsedData)
+
 };
+
+/*
+
+  pricesArray = _.map(parsedData.features,
+     function(college){
+       return college.properties.Median_HHIncome;
+   });
+
+   theLimits = chroma.limits(pricesArray, 'q', 5);
+
+   myStyle = function(feature){
+     if (feature.properties.Median_HHIncome < theLimits[1]) {
+       return {fillColor: colorRamp[0], stroke: false};
+     } else if (feature.properties.Median_HHIncome < theLimits[2]) {
+       return {fillColor: colorRamp[1], stroke: false};
+     } else if (feature.properties.Median_HHIncome < theLimits[3]) {
+       return {fillColor: colorRamp[2], stroke: false};
+     } else if (feature.properties.Median_HHIncome < theLimits[4]) {
+       return {fillColor: colorRamp[3], stroke: false};
+     } else {
+       return {fillColor: colorRamp[4], stroke: false};
+     }
+   };
+
+   featureGroup = L.geoJson(parsedData, {
+     style: myStyle,
+
+     pointToLayer: function(feature, latlng) {
+         return new L.CircleMarker(latlng, {radius: 3, fillOpacity: 0.85});
+     },
+
+     onEachFeature: function (feature, layer) {
+         layer.bindPopup(pointPopup(feature));
+     }
+   });
+   map.addLayer(featureGroup);
+*/
+
 
 var slide3Func = function() {
   //code here
@@ -140,25 +198,38 @@ var state = {
 /* =====================
   Data
 ===================== */
-var nhoodURL = "https://raw.githubusercontent.com/alisanroman/philly-hoods/master/data/Neighborhoods_Philadelphia.geojson";
-var nhoodParse = $.ajax(nhoodURL);
-var nhoodParse1 = JSON.parse(nhoodParse.responseText);
+var polyData = "https://raw.githubusercontent.com/alisanroman/qapScoring/master/data/polyData.geojson";
+var pointData = "";
 
-var tractsURL = "https://raw.githubusercontent.com/alisanroman/qapScoring/master/data/Census_Tracts_2010.geojson";
-
-
-var colorRamp = ["#C07CBE","#DFBCDD","#FEFDFC","#FCD47F","#FBAC02"];
+var colorRamp = ["#F03400","#F26711","#D9A60F","#758540","#384216"];
 
 /* =====================
   Functionality
 ===================== */
 var parsedData;
+var pointParsedData;
 var featureGroup;
 var theLimits;
 var myStyle = {};
 
-$.ajax(dataset).done(function(dataset) {
-  parsedData = JSON.parse(dataset);
+$.ajax(pointData).done(function(pointData) {
+  // Parse JSON
+  pointParsedData = JSON.parse(pointData);
+  featureGroup = L.geoJson(parsedData, {
+    style: {
+      fillColor: colorRamp[4],
+      stroke: false
+      },
+    pointToLayer: function(feature, latlng) {
+      return new L.CircleMarker(latlng, {radius: 3, fillOpacity: 0.85});
+    },
+  });
+  map.addLayer(featureGroup);
+};
+
+
+$.ajax(polyData).done(function(polyData) {
+  parsedData = JSON.parse(polyData);
   featureGroup = L.geoJson(parsedData, {
     style: {
       fillColor: colorRamp[4],
