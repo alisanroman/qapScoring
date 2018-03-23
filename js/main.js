@@ -77,7 +77,6 @@ var Stamen_TonerLite = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{
 }).addTo(map);
 
 
-
 /* ======================
     Slide functions
 ========================= */
@@ -278,6 +277,8 @@ var slide4Func = function() {
 var slide5Func = function() {
   clearMap();
   Stamen_TonerLite.addTo(map);
+  map.setView([39.964,-75.148], 15);
+
 
   // Show combo chloropleth
   comboPoly = _.map(parsedData.features,
@@ -287,7 +288,7 @@ var slide5Func = function() {
 
   // Define color scheme
   colorPolygons = function(feature) {
-    if(feature.properties.categ === "NA") {
+    if(feature.properties.categ === null) {
       return "#FFFFFF";
     } else if(feature.properties.categ == "Low poverty, high homeownership") {
       return colorRamp[4];
@@ -302,12 +303,10 @@ var slide5Func = function() {
     }
   };
 
-  // want to get a legend in here
-
   myStyle = function(feature) {
     var theStyle = {
       color: colorPolygons(feature),
-      fillOpacity: 0.45,
+      fillOpacity: 0.3,
       stroke: true,
       strokeOpacity: 1,
       weight: 1
@@ -321,6 +320,48 @@ var slide5Func = function() {
       layer.bindPopup(polyPopUp3(feature));
     }
   }).addTo(map);
+
+  // Also add affordable housing circles
+
+    // Define color scheme
+    colorCircles = function(feature) {
+      if(feature.properties.yrBuilt === null ) {
+        return "#CCCCCC";
+      } else if(feature.properties.yrBuilt < 1960) {
+        return colorRamp[0];
+      } else if(feature.properties.yrBuilt < 1970) {
+        return colorRamp[1];
+      } else if(feature.properties.yrBuilt < 1980) {
+        return colorRamp[2];
+      } else if(feature.properties.yrBuilt < 1990) {
+        return colorRamp[3];
+      } else { return colorRamp[4]; }
+    };
+
+    myStyle1 = function(feature) {
+      var theStyle = {
+        stroke: true,
+        strokeOpacity: 0.75,
+        fillOpacity: 0.6,
+        color: colorCircles(feature),
+        radius: feature.properties.totalUnits * 0.2,
+        weight: 1
+      };
+      return(theStyle);
+    };
+
+    featureGroup = L.geoJson(pointParsedData, {
+      style: myStyle1,
+      pointToLayer: function(feature, latlng) {
+          return new L.CircleMarker(latlng, {fillOpacity: 0.65});
+      },
+      onEachFeature: function (feature, layer) {
+          layer.bindPopup(pointPopUp(feature));
+      }
+    }).addTo(map);
+
+
+
 
 };
 
@@ -347,7 +388,7 @@ var state = {
       "text": slide4text
     },
     {
-      "title": "Putting it all together.",
+      "title": "Putting it together.",
       "text": slide5text
     }
   ]

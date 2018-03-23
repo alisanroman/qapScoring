@@ -49,6 +49,11 @@ p.main {
   margin: 5px;
   color: #CCCCCC;
   font-size: 12px;
+  font-weight: lighter;
+}
+
+.hidden {
+  display: none;
 }
 
 button.abutton {
