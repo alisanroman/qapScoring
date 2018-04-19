@@ -1,3 +1,36 @@
+/* =====================
+State object
+===================== */
+var state = {
+  "slideNumber": 0,
+  "slideData": [
+    {
+      "title": "Where are there low poverty rates?",
+      "text": slide1text
+    },
+    {
+      "title": "Where are there limited affordable housing options?",
+      "text": slide2text
+    },
+    {
+      "title": "Where has there been limited affordable housing production in the past 20 years?",
+      "text": slide3text
+    },
+    {
+      "title": "Where are the high owner-occupied markets?",
+      "text": slide4text
+    },
+    {
+      "title": "Putting it together.",
+      "text": slide5text
+    }
+  ]
+};
+
+
+
+
+
 var slide1title = "Where are there low poverty rates?";
 var slide1text = "Studies have shown that by siting affordable housing projects in neighborhoods with lower concentrations of poverty, incoming residents have greater opportunity.";
 

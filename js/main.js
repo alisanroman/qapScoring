@@ -1,6 +1,21 @@
 /* =====================
+  Data
+===================== */
+var polyData = "https://raw.githubusercontent.com/alisanroman/qapScoring/master/data/polyData.geojson";
+var pointData = "https://raw.githubusercontent.com/alisanroman/qapScoring/master/data/pointData.geojson";
+var colorRamp = ["#F03400","#F26711","#D9A60F","#758540","#384216"];
+var colorRampRev = ["#384216", "#758540", "#D9A60F", "#F26711", "#F03400"];
+
+/* =====================
   Helper functions
 ===================== */
+var parsedData;
+var pointParsedData;
+var featureGroup;
+var theLimits;
+var myStyle = {};
+var legend;
+
 var defaultMapView = function(){
   map.setView([40, -75.1090], 11);
 };
@@ -97,25 +112,44 @@ var slide1Func = function(e) {
   });
 
   theLimits = chroma.limits(povertyArray,'q',5);
+  theLimits2 = [0,10,20,30,40,62.5];
 
   // Define color scheme
   colorPolygons = function(feature) {
-    if(feature.properties.povPct === "NA") {
+    if(feature.properties.povPct === "NA" | feature.properties.pop <= 5) {
       return "#FFFFFF";
-    } else if(feature.properties.povPct < theLimits[1]) {
+    } else if(feature.properties.povPct <= theLimits2[1]) {
       return colorRamp[4];
-    } else if(feature.properties.povPct < theLimits[2]) {
+    } else if(feature.properties.povPct <= theLimits2[2]) {
       return colorRamp[3];
-    } else if(feature.properties.povPct < theLimits[3]) {
+    } else if(feature.properties.povPct <= theLimits2[3]) {
       return colorRamp[2];
-    } else if(feature.properties.povPct < theLimits[4]) {
+    } else if(feature.properties.povPct <= theLimits2[4]) {
       return colorRamp[1];
     } else {
       return colorRamp[0];
     }
   };
 
-  // want to get a legend in here
+  // Create legend
+/*  var legend = L.control({position: 'bottomright'});
+  legend.onAdd = function (map) {
+  	var div = L.DomUtil.create('div', 'info legend'),
+        povRange = [ theLimits2[0] + '-' + theLimits2[1] + '%',
+                     theLimits2[1]+1 + '-' + theLimits2[2] + '%',
+                     theLimits2[2]+1 + '-' + theLimits2[3] + '%',
+                     theLimits2[3]+1 + '-' + theLimits2[4] + '%',
+                    '> ' + theLimits2[4] + '%'];
+  	// loop through and generate a label with a color for each value
+    div.innerHTML += '<strong>% Living under <br>the poverty line</strong><br><br>';
+  	for (var i = 0; i < povRange.length; i++) {
+  		div.innerHTML +=
+  			'<i class="circle" style="background:' + colorRampRev[i] + '"></i> ' + (povRange[i] ? povRange[i] + '<br>' : '+');
+  	}
+  	return div;
+  };
+  legend.addTo(map); */
+
 
   myStyle = function(feature) {
     var theStyle = {
@@ -359,10 +393,6 @@ var slide5Func = function() {
           layer.bindPopup(pointPopUp(feature));
       }
     }).addTo(map);
-
-
-
-
 };
 
 /* =====================
@@ -395,22 +425,8 @@ var state = {
 };
 
 /* =====================
-  Data
-===================== */
-var polyData = "https://raw.githubusercontent.com/alisanroman/qapScoring/master/data/polyData.geojson";
-var pointData = "https://raw.githubusercontent.com/alisanroman/qapScoring/master/data/pointData.geojson";
-
-var colorRamp = ["#F03400","#F26711","#D9A60F","#758540","#384216"];
-
-/* =====================
   Functionality
 ===================== */
-var parsedData;
-var pointParsedData;
-var featureGroup;
-var theLimits;
-var myStyle = {};
-
 $.ajax(pointData).done(function(pointData) {
   // Parse JSON
   pointParsedData = JSON.parse(pointData);
@@ -436,57 +452,81 @@ $.ajax(polyData).done(function(polyData) {
     },
   });
   map.addLayer(featureGroup);
+});
 
-  // Click Functionality
-  var clickNextButton = function(e) {
-    if(state.slideNumber < state.slideData.length) {
-      state.slideNumber +=1;
-    } else {
-      state.slideNumber = 1;
+var pages = state.slideData.length;
+var prev = document.getElementById("previous");
+var next = document.getElementById("next");
+prev.style.display = "none";
+
+var clickNextButton = function(e) {
+  if(state.slideNumber == 0) {
+    state.slideNumber = 1;
+    next.innerText = "Next";
+    next.style.display = "";
+
+  } else if(state.slideNumber < pages-1) {
+    state.slideNumber +=1;
+    console.log(state.slideNumber);
+    prev.style.display = "";
+
+  } else {
+    state.slideNumber +=1;
+    next.style.display = "none";
+  }
+
+  $(".Slide-title").html(state.slideData[state.slideNumber -1].title);
+  $(".Slide-text").html(state.slideData[state.slideNumber-1].text);
+  showTheSlide(state.slideNumber);
+
+};
+
+var clickPreviousButton = function(e) {
+  if(state.slideNumber == 1) {
+    state.slideNumber -=1;
+    prev.style.display="none";
+
+  } else if(state.slideNumber == 2) {
+    state.slideNumber -=1;
+    prev.style.display="none";
+
+  } else {
+    state.slideNumber -=1;
+    next.style.display = "";
+    console.log(state.slideNumber);
+  }
+
+  $(".Slide-title").html(state.slideData[state.slideNumber -1].title);
+  $(".Slide-text").html(state.slideData[state.slideNumber-1].text);
+  showTheSlide(state.slideNumber);
+};
+
+//  Function to call the appropriate slide function
+var showTheSlide = function(slideNumber) {
+  switch(slideNumber) {
+    case 1:
+      slide1Func();
+      break;
+    case 2:
+      slide2Func();
+      break;
+    case 3:
+      slide3Func();
+      break;
+    case 4:
+      slide4Func();
+      break;
+    case 5:
+      slide5Func();
+      break;
+    default:
+      break;
     }
-    $(".Slide-title").html(state.slideData[state.slideNumber -1].title);
-    $(".Slide-text").html(state.slideData[state.slideNumber-1].text);
-    showTheSlide(state.slideNumber);
-  };
-
-  var clickPreviousButton = function(e) {
-    if(state.slideNumber > 1) {
-      state.slideNumber -=1;
-    } else {
-      state.slideNumber = state.slideData.length;
-    }
-    $(".Slide-title").html(state.slideData[state.slideNumber -1].title);
-    $(".Slide-text").html(state.slideData[state.slideNumber-1].text);
-    showTheSlide(state.slideNumber);
-  };
-
-  //  Function to call the appropriate slide function
-  var showTheSlide = function(slideNumber) {
-    switch(slideNumber) {
-      case 1:
-        slide1Func();
-        break;
-      case 2:
-        slide2Func();
-        break;
-      case 3:
-        slide3Func();
-        break;
-      case 4:
-        slide4Func();
-        break;
-      case 5:
-        slide5Func();
-        break;
-      default:
-        break;
-      }
-  };
-  //  On clicks call the clickbutton functions, calling the showslide function
-  $('#next').click(function() {
-    clickNextButton();
-  });
-  $('#previous').click(function() {
-    clickPreviousButton();
-  });
+};
+//  On clicks call the clickbutton functions, calling the showslide function
+$('#next').click(function() {
+  clickNextButton();
+});
+$('#previous').click(function() {
+  clickPreviousButton();
 });
