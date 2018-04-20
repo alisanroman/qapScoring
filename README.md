@@ -3,7 +3,7 @@ An interactive map to assist in optimal affordable housing site selection
 
 ## Section A. Community and Economic Impact [Total of 30]
 	1. Underserved Areas (20 pts)
-		a. General Occupancy - areas of opportunity	(18 pts)
+		a. General Occupancy - areas of opportunity (18 pts)
 			Low poverty rates (3 pts)
 			Limited affordable housing options, sub and non-sub		3
 			Limited affordable housing production in past 20 yrs		3

@@ -15,16 +15,54 @@
 
 <div id='map'></div>
 
+<div class='map-overlay' id='features'><h2>Poverty Rates, by Neighborhood</h2><div id='pd'><p>Hover over a neighborhood!</p></div></div>
+<div class='map-overlay' id='legend'></div>
+
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoiYW1zciIsImEiOiJjamY0Y2VtNTcwcmh0MzJsM2U0dGlvazNwIn0.n1yPJwVT5cTlvYsvMpfhFw';
 var map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/mapbox/dark-v9',
+    style: 'mapbox://styles/amsr/cjg7ddv260emp2rniwg5mjeoa',
     center: [-75.2,40],
     zoom: 10
 });
 
+
 map.on('load', function() {
+  var layers = ['0-10%', '10-20%', '20-40%', '40-50%','>50%'];
+  var colors = ['#F03400','#F26711','#D9A60F','#758540','#384216'];
+
+  for (i = 0; i < layers.length; i++) {
+    var layer = layers[i];
+    var color = colors[i];
+    var item = document.createElement('div');
+    var key = document.createElement('span');
+    key.className = 'legend-key';
+    key.style.backgroundColor = color;
+
+    var value = document.createElement('span');
+    value.innerHTML = layer;
+    item.appendChild(key);
+    item.appendChild(value);
+    legend.appendChild(item);
+  }
+
+  map.on('mousemove', function(e) {
+    var states = map.queryRenderedFeatures(e.point, {
+      layers: ['nhoodData']
+      });
+
+      if (states.length > 0) {
+        document.getElementById('pd').innerHTML = '<h3><strong>' + states[0].properties.name + '</strong></h3><p><strong><em>' + states[0].properties.povPct + '</strong>% of people per square mile</em></p>';
+  } else {
+    document.getElementById('pd').innerHTML = '<p>Hover over a neighborhood!</p>';
+  }
+});
+
+
+
+
+
   // Add a new source from our GeoJSON data and set the 'cluster' option to true. GL-JS will add the point_count property to your source data.
   map.addSource("housing",{
     type: "geojson",
@@ -79,76 +117,3 @@ map.on('load', function() {
 
 </body>
 </html>
-
-
-
-
-
-
-/*
-// helper function
-function findNearestCluster(map, marker, i) {
-  let clusterSelected = marker;
-  // get bounds
-  let south = map.getBounds()._sw;
-  let north = map.getBounds()._ne;
-  let bounds = [south.lng, south.lat, north.lng, north.lat];
-
-  let currentClusters = i.getClusters(bounds, Math.floor(map.getZoom()));
-
-  let compare = {
-    lng: clusterSelected.geometry.coordinates[0],
-    lat: clusterSelected.geometry.coordinates[1]
-  };
-
-  let minClusters = currentClusters.map(cluster => {
-    let lng = cluster.geometry.coordinates[0];
-    let lat = cluster.geometry.coordinates[1];
-
-    return {
-      id: cluster.properties.cluster_id,
-      geometry: cluster.geometry,
-      value: Math.pow(compare.lng - lng,2) * Math.pow(compare.lat-lat,2)
-    };
-  });
-
-  return minClusters.sort(function(a,b) {
-    return a.value - b.value;
-  });
-}
-
-map.on('click', function (e) {
-  var cluster_features = map.queryRenderedFeatures(e.point, {
-    layers: [
-      'cluster-0',
-      'cluster-1',
-      'cluster-2'
-    ]
-  });
-
-  var cluster_feature = cluster_features[0];
-
-  var clusters = findNearestCluster(map, cluster_feature, features);
-  var nearestCluster = clusters[0];
-
-  var currentZoom = Math.floor(map.getZoom());
-  var nextZoomLevel = supercluster()
-      .getClusterExpansionZoom(nearestCluster.id, currentZoom);
-
-  if (cluster_feature && cluster_feature.properties.cluster) {
-    map.jumpTo({
-      around: e.lngLat,
-      zoom: nextZoomLevel
-    });
-  }
-});
-
-*/
-
-map.addControl(new MapboxGeocoder({
-    accessToken: mapboxgl.accessToken,
-    // Further limit results to geographic bounds representing PHila
-    bbox: [-75.3,39.9,-75.0,40.3]
-}));
-
-map.addControl(new mapboxgl.NavigationControl());
